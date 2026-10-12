@@ -90,6 +90,11 @@ A GPU driver with Vulkan support, including 32-bit libraries, is also required.
 
 The Steam Linux Runtime needs unprivileged user namespaces, which are enabled by default on most distributions.
 
+## Why
+
+I wanted to play [World of Warcraft: Forever](https://worldofwarcraft.blizzard.com/en-gb/forever) on my [Debian](https://www.debian.org/) machine,
+without having to launch Battle.net through something like [Steam](https://store.steampowered.com/).
+
 ## Disclaimer
 
 Quartermaster is not associated with Blizzard Entertainment in any way, and is not endorsed or supported by them.

@@ -24,9 +24,6 @@ All binaries are downloaded from their upstream origin only — no third-party m
 ## Installation
 
 Quartermaster is installed for the current user only, and does not need root.
-It can be installed natively with the install script, or as a Flatpak.
-
-### Native
 
 The install script is attached to every release, so there is no need to download the source:
 [install.sh](https://github.com/SirBisgaard/Quartermaster/releases/latest/download/install.sh)
@@ -50,16 +47,6 @@ sh install.sh [options]
 The desktop shortcut is a standard `.desktop` entry, which GNOME, KDE Plasma and other freedesktop-compliant desktops pick up in their application menu.
 It is placed in `~/.local/share/applications`.
 
-### Flatpak
-
-For those who prefer a sandboxed install. Quartermaster is not published on Flathub; the Flatpak bundle is only distributed through GitHub releases.
-
-Download `quartermaster.flatpak` from the [latest release](https://github.com/SirBisgaard/Quartermaster/releases/latest) and install it:
-
-```sh
-flatpak install --user quartermaster.flatpak
-```
-
 ## Usage
 
 Start Quartermaster from the desktop shortcut, or run:
@@ -82,8 +69,6 @@ Uninstalling removes everything Quartermaster has installed: the install directo
 
 Battle.net or games installed to a location outside the install directory, such as another disk, are not removed.
 
-### Native
-
 Run the install script with the same options used when installing, plus `--uninstall`:
 
 ```sh
@@ -92,15 +77,7 @@ curl -fsSL https://github.com/SirBisgaard/Quartermaster/releases/latest/download
 
 If you installed to a custom directory, add `--install-dir <path>`.
 
-### Flatpak
-
-```sh
-flatpak uninstall --user --delete-data io.github.SirBisgaard.Quartermaster
-```
-
 ## Requirements
-
-### Native
 
 | Tool                | Used for                                         | Package                              |
 |---------------------|--------------------------------------------------|--------------------------------------|
@@ -112,10 +89,6 @@ flatpak uninstall --user --delete-data io.github.SirBisgaard.Quartermaster
 A GPU driver with Vulkan support, including 32-bit libraries, is also required.
 
 The Steam Linux Runtime needs unprivileged user namespaces, which are enabled by default on most distributions.
-
-### Flatpak
-
-Only `flatpak` is required. Everything else is included in the Flatpak runtime.
 
 ## Disclaimer
 

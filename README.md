@@ -4,7 +4,7 @@ Quartermaster keeps everything the Battle.net client needs on Linux supplied and
 
 On every start it:
 
-1. Updates itself from the latest GitHub release.
+1. Updates itself from the latest GitHub release, if enabled with `--self-update`.
 2. Installs or updates to the latest GE-Proton, which ships its own Wine build — nothing is required from your distribution.
 3. Installs or updates the Steam Linux Runtime.
 4. Installs the Battle.net client if it is missing, otherwise starts it.
@@ -42,10 +42,14 @@ sh install.sh [options]
 |------------------------|------------------------------------------------------------------|------------------------------------|
 | `--install-dir <path>` | Where Quartermaster is installed                                 | `~/.local/share/quartermaster`     |
 | `--no-desktop`         | Do not create a desktop shortcut                                 | Shortcut is created                |
+| `--self-update`        | Let Quartermaster update itself from new releases                | Disabled                           |
 | `--uninstall`          | Remove Quartermaster and everything it installed                 |                                    |
 
 The desktop shortcut is a standard `.desktop` entry, which GNOME, KDE Plasma and other freedesktop-compliant desktops pick up in their application menu.
 It is placed in `~/.local/share/applications`.
+
+To turn self-update on or off later, run the install script again with or without `--self-update`.
+GE-Proton, the Steam Linux Runtime and Battle.net are kept.
 
 ## Usage
 

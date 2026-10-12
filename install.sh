@@ -8,6 +8,7 @@ APP_ID=4180000001
 
 dir=$DATA_HOME/quartermaster
 desktop=1
+self_update=0
 action=run_install
 
 desktop_file=$DATA_HOME/applications/quartermaster.desktop
@@ -28,6 +29,7 @@ usage() {
 
 	  --install-dir <path>  Where Quartermaster is installed (default: $DATA_HOME/quartermaster)
 	  --no-desktop          Do not create a desktop shortcut
+	  --self-update         Let Quartermaster update itself from new releases
 	  --uninstall           Remove Quartermaster and everything it installed
 	EOF
 	exit 1
@@ -42,6 +44,10 @@ while [ $# -gt 0 ]; do
 			;;
 		--no-desktop)
 			desktop=0
+			shift
+			;;
+		--self-update)
+			self_update=1
 			shift
 			;;
 		--uninstall)
@@ -78,6 +84,12 @@ run_install() {
 
 	chmod +x "$dir/quartermaster.new"
 	mv "$dir/quartermaster.new" "$dir/quartermaster"
+
+	if [ "$self_update" = 1 ]; then
+		touch "$dir/self-update"
+	else
+		rm -f "$dir/self-update"
+	fi
 
 	mkdir -p "$(dirname "$bin_link")"
 	ln -sfn "$dir/quartermaster" "$bin_link"

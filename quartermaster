@@ -34,7 +34,7 @@ download() {
 }
 
 update_self() {
-	if [ "$QM_VERSION" = dev ] || [ -n "${QM_UPDATED:-}" ]; then
+	if [ "$QM_VERSION" = dev ] || [ -n "${QM_UPDATED:-}" ] || [ ! -f "$dir/self-update" ]; then
 		return 0
 	fi
 

@@ -6,9 +6,10 @@ On every start it:
 
 1. Updates itself from the latest GitHub release.
 2. Installs or updates to the latest GE-Proton, which ships its own Wine build — nothing is required from your distribution.
-3. Installs the Battle.net client if it is missing, otherwise starts it.
+3. Installs or updates the Steam Linux Runtime.
+4. Installs the Battle.net client if it is missing, otherwise starts it.
 
-Everything is self-contained: GE-Proton and the Battle.net prefix live inside the Quartermaster install directory and are run from there.
+Everything is self-contained: GE-Proton, the Steam Linux Runtime and the Battle.net prefix live inside the Quartermaster install directory and are run from there.
 Steam, system Wine and other Proton installations are never used or touched.
 
 All binaries are downloaded from their upstream origin only — no third-party mirrors or repackaged builds:
@@ -17,6 +18,7 @@ All binaries are downloaded from their upstream origin only — no third-party m
 |------------------|------------------------------------------------------------------------|
 | Quartermaster    | [GitHub releases](https://github.com/SirBisgaard/Quartermaster/releases) |
 | GE-Proton        | [GloriousEggroll/proton-ge-custom releases](https://github.com/GloriousEggroll/proton-ge-custom/releases) |
+| Steam Linux Runtime | [Valve's runtime images](https://repo.steampowered.com/steamrt4/images/latest-public-stable/) |
 | Battle.net       | Official installer from [Blizzard](https://download.battle.net)        |
 
 ## Installation
@@ -68,11 +70,17 @@ quartermaster
 
 It checks for updates, brings everything up to date and then installs or starts Battle.net.
 
+> **GNOME users:** GNOME has no system tray by default. Install the
+> [AppIndicator and KStatusNotifierItem Support](https://extensions.gnome.org/extension/615/appindicator-support/)
+> extension to show the Battle.net tray icon in the top bar.
+
 ## Uninstall
 
 Uninstalling removes everything Quartermaster has installed: the install directory with GE-Proton, the Battle.net prefix and all games installed through it, and the desktop shortcut.
 
 > **Warning:** Games installed through Battle.net are deleted as well. Back up anything you want to keep before uninstalling.
+
+Battle.net or games installed to a location outside the install directory, such as another disk, are not removed.
 
 ### Native
 
@@ -98,11 +106,12 @@ flatpak uninstall --user --delete-data io.github.SirBisgaard.Quartermaster
 |---------------------|--------------------------------------------------|--------------------------------------|
 | `sh`                | Running Quartermaster                            | Any POSIX shell                      |
 | `curl`              | Downloading releases                             | `curl`                               |
-| `tar`, `gzip`       | Unpacking GE-Proton                              | `tar`, `gzip`                        |
+| `tar`, `gzip`, `xz` | Unpacking GE-Proton and the Steam Linux Runtime  | `tar`, `gzip`, `xz-utils` (`xz` on Fedora and Arch) |
 | `sha256sum`, `sha512sum` | Verifying downloads                         | `coreutils`                          |
-| `python3`           | Running GE-Proton                                | `python3` (`python` on Arch)         |
 
 A GPU driver with Vulkan support, including 32-bit libraries, is also required.
+
+The Steam Linux Runtime needs unprivileged user namespaces, which are enabled by default on most distributions.
 
 ### Flatpak
 

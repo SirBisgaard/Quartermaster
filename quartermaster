@@ -1,0 +1,158 @@
+#!/bin/sh
+set -eu
+
+QM_VERSION=dev
+GITHUB=${QM_GITHUB:-https://github.com}
+QM_REPO=SirBisgaard/Quartermaster
+GE_REPO=GloriousEggroll/proton-ge-custom
+RUNTIME_URL=https://repo.steampowered.com/steamrt4/images/latest-public-stable
+APP_ID=4180000001
+BATTLENET_SETUP_URL='https://downloader.battle.net/download/getInstaller?os=win&installer=Battle.net-Setup.exe'
+
+self=$(readlink -f "$0")
+dir=$(dirname "$self")
+tmp=$dir/.tmp
+prefix=$dir/prefix
+launcher=
+
+log() {
+	printf 'quartermaster: %s\n' "$*" >&2
+}
+
+die() {
+	log "$*"
+	exit 1
+}
+
+latest_tag() {
+	curl -fsSI "$GITHUB/$1/releases/latest" | tr -d '\r' | sed -n 's|^[Ll]ocation: .*/releases/tag/||p'
+}
+
+download() {
+	log "downloading $1"
+	curl -fL --retry 3 --progress-bar -o "$2" "$1"
+}
+
+update_self() {
+	if [ "$QM_VERSION" = dev ] || [ -n "${QM_UPDATED:-}" ]; then
+		return 0
+	fi
+
+	tag=$(latest_tag "$QM_REPO") || return 1
+	if [ -z "$tag" ] || [ "$tag" = "$QM_VERSION" ]; then
+		return 0
+	fi
+
+	log "updating quartermaster $QM_VERSION -> $tag"
+	release=$GITHUB/$QM_REPO/releases/download/$tag
+	download "$release/quartermaster" "$tmp/quartermaster" || return 1
+	download "$release/sha256sums" "$tmp/sha256sums" || return 1
+	(cd "$tmp" && grep ' quartermaster$' sha256sums | sha256sum -c --quiet -) || return 1
+
+	chmod +x "$tmp/quartermaster"
+	mv "$tmp/quartermaster" "$self"
+	QM_UPDATED=1 exec "$self" "$@"
+}
+
+update_proton() {
+	arch=$(uname -m)
+	tag=$(latest_tag "$GE_REPO") || return 1
+	[ -n "$tag" ] || return 1
+
+	name=$tag-$arch
+	if [ -d "$dir/proton/$name" ]; then
+		return 0
+	fi
+
+	log "updating GE-Proton to $name"
+	release=$GITHUB/$GE_REPO/releases/download/$tag
+	download "$release/$name.tar.gz" "$tmp/$name.tar.gz" || return 1
+	download "$release/$name.sha512sum" "$tmp/$name.sha512sum" || return 1
+	(cd "$tmp" && sha512sum -c --quiet "$name.sha512sum") || return 1
+
+	mkdir -p "$dir/proton"
+	tar -xzf "$tmp/$name.tar.gz" -C "$dir/proton" || return 1
+	ln -sfn "$name" "$dir/proton/current"
+
+	for old in "$dir/proton"/GE-Proton*; do
+		if [ "$old" != "$dir/proton/$name" ]; then
+			rm -rf "$old"
+		fi
+	done
+}
+
+update_runtime() {
+	version=$(curl -fsSL "$RUNTIME_URL/VERSION.txt") || return 1
+	[ -n "$version" ] || return 1
+	if [ -d "$dir/runtime/$version" ]; then
+		return 0
+	fi
+
+	case $(uname -m) in
+		aarch64) name=SteamLinuxRuntime_4-arm64 ;;
+		*) name=SteamLinuxRuntime_4 ;;
+	esac
+
+	log "updating Steam Linux Runtime to $version"
+	download "$RUNTIME_URL/$name.tar.xz" "$tmp/$name.tar.xz" || return 1
+	download "$RUNTIME_URL/SHA256SUMS" "$tmp/SHA256SUMS" || return 1
+	(cd "$tmp" && grep " \*$name.tar.xz$" SHA256SUMS | sha256sum -c --quiet -) || return 1
+
+	mkdir -p "$tmp/runtime" "$dir/runtime"
+	tar -xJf "$tmp/$name.tar.xz" -C "$tmp/runtime" || return 1
+	mv "$tmp/runtime"/* "$dir/runtime/$version" || return 1
+	ln -sfn "$version" "$dir/runtime/current"
+
+	for old in "$dir/runtime"/*; do
+		if [ "$old" != "$dir/runtime/$version" ] && [ "$old" != "$dir/runtime/current" ]; then
+			rm -rf "$old"
+		fi
+	done
+}
+
+find_launcher() {
+	location=$(sed -n '/^\[Software\\\\Wow6432Node\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Uninstall\\\\Battle.net\]/,/^$/s/^"InstallLocation"="\(.*\)"$/\1/p' "$prefix/pfx/system.reg" 2>/dev/null)
+	[ -n "$location" ] || return 1
+
+	drive=$(printf '%s' "$location" | cut -c1 | tr 'A-Z' 'a-z')
+	path=$(printf '%s' "$location" | cut -c3- | sed 's|\\\\|/|g')
+	root=$(readlink -f "$prefix/pfx/dosdevices/$drive:") || return 1
+	root=${root%/}
+
+	launcher="$root$path/Battle.net Launcher.exe"
+	[ -f "$launcher" ]
+}
+
+for tool in curl tar gzip xz sha256sum sha512sum; do
+	command -v "$tool" >/dev/null || die "missing required tool: $tool"
+done
+
+rm -rf "$tmp"
+mkdir -p "$tmp"
+trap 'rm -rf "$tmp"' EXIT
+
+update_self "$@" || log "could not update quartermaster, continuing with $QM_VERSION"
+update_proton || log "could not update GE-Proton, continuing with the installed version"
+update_runtime || log "could not update the Steam Linux Runtime, continuing with the installed version"
+
+proton_dir=$(readlink -f "$dir/proton/current") || die "GE-Proton is not installed and could not be downloaded"
+[ -x "$proton_dir/proton" ] || die "GE-Proton is not installed and could not be downloaded"
+runtime=$dir/runtime/current/_v2-entry-point
+[ -x "$runtime" ] || die "the Steam Linux Runtime is not installed and could not be downloaded"
+
+mkdir -p "$prefix"
+export STEAM_COMPAT_DATA_PATH="$prefix"
+export STEAM_COMPAT_CLIENT_INSTALL_PATH="$dir"
+export STEAM_COMPAT_TOOL_PATHS="$proton_dir"
+export SteamAppId=$APP_ID
+
+run() {
+	"$runtime" --verb=waitforexitandrun -- "$proton_dir/proton" waitforexitandrun "$1"
+}
+
+if find_launcher; then
+	run "$launcher"
+else
+	download "$BATTLENET_SETUP_URL" "$tmp/Battle.net-Setup.exe" || die "could not download the Battle.net installer"
+	run "$tmp/Battle.net-Setup.exe"
+fi

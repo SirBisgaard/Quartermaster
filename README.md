@@ -107,3 +107,7 @@ It exists only to make it simple to enjoy Blizzard's games on Linux.
 Quartermaster will be maintained until Blizzard releases a native Linux client.
 
 Battle.net is a trademark of Blizzard Entertainment, Inc.
+
+### Use of LLMs (AI)
+
+LLMs were used to write parts of this code. I review it, I test it, I'm responsible for it.

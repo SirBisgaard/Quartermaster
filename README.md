@@ -89,6 +89,7 @@ If you installed to a custom directory, add `--install-dir <path>`.
 | `curl`              | Downloading releases                             | `curl`                               |
 | `tar`, `gzip`, `xz` | Unpacking GE-Proton and the Steam Linux Runtime  | `tar`, `gzip`, `xz-utils` (`xz` on Fedora and Arch) |
 | `sha256sum`, `sha512sum` | Verifying downloads                         | `coreutils`                          |
+| `flock`             | Preventing two starts from running at once       | `util-linux`                         |
 
 A GPU driver with Vulkan support, including 32-bit libraries, is also required.
 

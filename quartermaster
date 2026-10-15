@@ -11,7 +11,7 @@ BATTLENET_SETUP_URL='https://downloader.battle.net/download/getInstaller?os=win&
 
 self=$(readlink -f "$0")
 dir=$(dirname "$self")
-tmp=$dir/.tmp
+tmp=$dir/.tmp.$$
 prefix=$dir/prefix
 launcher=
 
@@ -25,12 +25,12 @@ die() {
 }
 
 latest_tag() {
-	curl -fsSI "$GITHUB/$1/releases/latest" | tr -d '\r' | sed -n 's|^[Ll]ocation: .*/releases/tag/||p'
+	curl -fsSI --connect-timeout 10 --max-time 30 "$GITHUB/$1/releases/latest" | tr -d '\r' | sed -n 's|^[Ll]ocation: .*/releases/tag/||p'
 }
 
 download() {
 	log "downloading $1"
-	curl -fL --retry 3 --progress-bar -o "$2" "$1"
+	curl -fL --retry 3 --connect-timeout 10 --speed-limit 1024 --speed-time 30 --progress-bar -o "$2" "$1"
 }
 
 update_self() {
@@ -60,18 +60,19 @@ update_proton() {
 	[ -n "$tag" ] || return 1
 
 	name=$tag-$arch
-	if [ -d "$dir/proton/$name" ]; then
-		return 0
+	if [ ! -x "$dir/proton/$name/proton" ]; then
+		log "updating GE-Proton to $name"
+		release=$GITHUB/$GE_REPO/releases/download/$tag
+		download "$release/$name.tar.gz" "$tmp/$name.tar.gz" || return 1
+		download "$release/$name.sha512sum" "$tmp/$name.sha512sum" || return 1
+		(cd "$tmp" && sha512sum -c --quiet "$name.sha512sum") || return 1
+
+		mkdir -p "$tmp/proton" "$dir/proton"
+		tar -xzf "$tmp/$name.tar.gz" -C "$tmp/proton" || return 1
+		rm -rf "$dir/proton/$name"
+		mv "$tmp/proton/$name" "$dir/proton/$name" || return 1
 	fi
 
-	log "updating GE-Proton to $name"
-	release=$GITHUB/$GE_REPO/releases/download/$tag
-	download "$release/$name.tar.gz" "$tmp/$name.tar.gz" || return 1
-	download "$release/$name.sha512sum" "$tmp/$name.sha512sum" || return 1
-	(cd "$tmp" && sha512sum -c --quiet "$name.sha512sum") || return 1
-
-	mkdir -p "$dir/proton"
-	tar -xzf "$tmp/$name.tar.gz" -C "$dir/proton" || return 1
 	ln -sfn "$name" "$dir/proton/current"
 
 	for old in "$dir/proton"/GE-Proton*; do
@@ -82,7 +83,7 @@ update_proton() {
 }
 
 update_runtime() {
-	version=$(curl -fsSL "$RUNTIME_URL/VERSION.txt") || return 1
+	version=$(curl -fsSL --connect-timeout 10 --max-time 30 "$RUNTIME_URL/VERSION.txt") || return 1
 	[ -n "$version" ] || return 1
 	if [ -d "$dir/runtime/$version" ]; then
 		return 0
@@ -123,8 +124,17 @@ find_launcher() {
 	[ -f "$launcher" ]
 }
 
-for tool in curl tar gzip xz sha256sum sha512sum; do
+for tool in curl tar gzip xz sha256sum sha512sum flock; do
 	command -v "$tool" >/dev/null || die "missing required tool: $tool"
+done
+
+exec 9>"$dir/.lock"
+flock 9
+
+for old in "$dir"/.tmp.*; do
+	if [ -d "$old" ] && ! kill -0 "${old##*.}" 2>/dev/null; then
+		rm -rf "$old"
+	fi
 done
 
 rm -rf "$tmp"
@@ -145,6 +155,8 @@ export STEAM_COMPAT_DATA_PATH="$prefix"
 export STEAM_COMPAT_CLIENT_INSTALL_PATH="$dir"
 export STEAM_COMPAT_TOOL_PATHS="$proton_dir"
 export SteamAppId=$APP_ID
+
+exec 9>&-
 
 run() {
 	"$runtime" --verb=waitforexitandrun -- "$proton_dir/proton" waitforexitandrun "$1"

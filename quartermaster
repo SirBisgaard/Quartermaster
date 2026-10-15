@@ -5,7 +5,7 @@ QM_VERSION=dev
 GITHUB=${QM_GITHUB:-https://github.com}
 QM_REPO=SirBisgaard/Quartermaster
 GE_REPO=GloriousEggroll/proton-ge-custom
-RUNTIME_URL=https://repo.steampowered.com/steamrt4/images/latest-public-stable
+RUNTIME_URL=https://repo.steampowered.com/steamrt4/images
 APP_ID=4180000001
 BATTLENET_SETUP_URL='https://downloader.battle.net/download/getInstaller?os=win&installer=Battle.net-Setup.exe'
 
@@ -83,7 +83,7 @@ update_proton() {
 }
 
 update_runtime() {
-	version=$(curl -fsSL --connect-timeout 10 --max-time 30 "$RUNTIME_URL/VERSION.txt") || return 1
+	version=$(curl -fsSL --connect-timeout 10 --max-time 30 "$RUNTIME_URL/latest-public-stable.txt") || return 1
 	[ -n "$version" ] || return 1
 	if [ -d "$dir/runtime/$version" ]; then
 		return 0
@@ -95,8 +95,8 @@ update_runtime() {
 	esac
 
 	log "updating Steam Linux Runtime to $version"
-	download "$RUNTIME_URL/$name.tar.xz" "$tmp/$name.tar.xz" || return 1
-	download "$RUNTIME_URL/SHA256SUMS" "$tmp/SHA256SUMS" || return 1
+	download "$RUNTIME_URL/$version/$name.tar.xz" "$tmp/$name.tar.xz" || return 1
+	download "$RUNTIME_URL/$version/SHA256SUMS" "$tmp/SHA256SUMS" || return 1
 	(cd "$tmp" && grep " \*$name.tar.xz$" SHA256SUMS | sha256sum -c --quiet -) || return 1
 
 	mkdir -p "$tmp/runtime" "$dir/runtime"

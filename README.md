@@ -18,7 +18,7 @@ All binaries are downloaded from their upstream origin only — no third-party m
 |------------------|------------------------------------------------------------------------|
 | Quartermaster    | [GitHub releases](https://github.com/SirBisgaard/Quartermaster/releases) |
 | GE-Proton        | [GloriousEggroll/proton-ge-custom releases](https://github.com/GloriousEggroll/proton-ge-custom/releases) |
-| Steam Linux Runtime | [Valve's runtime images](https://repo.steampowered.com/steamrt4/images/latest-public-stable/) |
+| Steam Linux Runtime | [Valve's runtime images](https://repo.steampowered.com/steamrt4/images/) |
 | Battle.net       | Official installer from [Blizzard](https://download.battle.net)        |
 
 ## Installation

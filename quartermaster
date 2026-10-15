@@ -124,7 +124,7 @@ find_launcher() {
 	[ -f "$launcher" ]
 }
 
-for tool in curl tar gzip xz sha256sum sha512sum flock; do
+for tool in curl tar gzip xz sha256sum sha512sum flock pgrep; do
 	command -v "$tool" >/dev/null || die "missing required tool: $tool"
 done
 
@@ -158,12 +158,17 @@ export SteamAppId=$APP_ID
 
 exec 9>&-
 
+verb=waitforexitandrun
+if pgrep -u "$(id -u)" -f "^$dir/proton/[^ ]*/wineserver\$" >/dev/null; then
+	verb=run
+fi
+
 run() {
-	"$runtime" --verb=waitforexitandrun -- "$proton_dir/proton" waitforexitandrun "$1"
+	"$runtime" --verb=waitforexitandrun -- "$proton_dir/proton" "$verb" "$@"
 }
 
 if find_launcher; then
-	run "$launcher"
+	run "$launcher" "$@"
 else
 	download "$BATTLENET_SETUP_URL" "$tmp/Battle.net-Setup.exe" || die "could not download the Battle.net installer"
 	run "$tmp/Battle.net-Setup.exe"

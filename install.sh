@@ -8,6 +8,7 @@ APP_ID=4180000001
 
 dir=$DATA_HOME/quartermaster
 desktop=1
+game=
 self_update=0
 action=run_install
 
@@ -29,6 +30,7 @@ usage() {
 
 	  --install-dir <path>  Where Quartermaster is installed (default: $DATA_HOME/quartermaster)
 	  --no-desktop          Do not create a desktop shortcut
+	  --game <code>         Select this game in Battle.net when started from the desktop shortcut
 	  --self-update         Let Quartermaster update itself from new releases
 	  --uninstall           Remove Quartermaster and everything it installed
 	EOF
@@ -46,6 +48,11 @@ while [ $# -gt 0 ]; do
 			desktop=0
 			shift
 			;;
+		--game)
+			[ $# -ge 2 ] || usage
+			game=$2
+			shift 2
+			;;
 		--self-update)
 			self_update=1
 			shift
@@ -59,6 +66,10 @@ while [ $# -gt 0 ]; do
 			;;
 	esac
 done
+
+case $game in
+	*[!A-Za-z0-9]*) die "invalid game code: $game" ;;
+esac
 
 case $dir in
 	/*) ;;
@@ -95,6 +106,11 @@ run_install() {
 	ln -sfn "$dir/quartermaster" "$bin_link"
 
 	if [ "$desktop" = 1 ]; then
+		exec_line="\"$dir/quartermaster\""
+		if [ -n "$game" ]; then
+			exec_line="$exec_line \"--exec=launch $game\""
+		fi
+
 		install_icon
 		mkdir -p "$(dirname "$desktop_file")"
 		cat >"$desktop_file" <<-EOF
@@ -102,7 +118,7 @@ run_install() {
 		Type=Application
 		Name=Battle.net
 		Comment=Keeps Battle.net up to date and starts it
-		Exec="$dir/quartermaster"
+		Exec=$exec_line
 		Icon=quartermaster
 		StartupWMClass=steam_app_$APP_ID
 		Terminal=false

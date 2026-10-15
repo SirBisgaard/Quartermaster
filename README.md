@@ -42,6 +42,7 @@ sh install.sh [options]
 |------------------------|------------------------------------------------------------------|------------------------------------|
 | `--install-dir <path>` | Where Quartermaster is installed                                 | `~/.local/share/quartermaster`     |
 | `--no-desktop`         | Do not create a desktop shortcut                                 | Shortcut is created                |
+| `--game <code>`        | Select this game in Battle.net when started from the desktop shortcut, see [game codes](#game-codes) | No game is selected |
 | `--self-update`        | Let Quartermaster update itself from new releases                | Disabled                           |
 | `--uninstall`          | Remove Quartermaster and everything it installed                 |                                    |
 
@@ -60,6 +61,39 @@ quartermaster
 ```
 
 It checks for updates, brings everything up to date and then installs or starts Battle.net.
+
+Any arguments are passed on to Battle.net, for example to select a game in the client:
+
+```sh
+quartermaster --exec="launch WoWF"
+```
+
+If Battle.net is not running yet, the game is selected when the client opens.
+If Battle.net is already running, the game is selected and started.
+
+### Game codes
+
+| Game                              | Code   |
+|-----------------------------------|--------|
+| World of Warcraft                 | `WoW`  |
+| World of Warcraft Classic         | `WoWC` |
+| World of Warcraft: Forever        | `WoWF` |
+| Diablo III                        | `D3`   |
+| Diablo II: Resurrected            | `OSI`  |
+| Diablo IV                         | `Fen`  |
+| Diablo Immortal                   | `ANBS` |
+| StarCraft: Remastered             | `S1`   |
+| StarCraft II                      | `S2`   |
+| Warcraft III: Reforged            | `W3`   |
+| Warcraft Rumble                   | `GRY`  |
+| Hearthstone                       | `WTCG` |
+| Heroes of the Storm               | `Hero` |
+| Overwatch 2                       | `Pro`  |
+| Blizzard Arcade Collection        | `RTRO` |
+
+Battle.net does not publish these codes. They are collected from the
+[Playnite Battle.net library](https://github.com/JosefNemec/PlayniteExtensions/blob/master/source/Libraries/BattleNetLibrary/BattleNetGames.cs),
+which also lists codes for Call of Duty and other titles, and from [Lutris](https://lutris.net/games/install/40020/view) for the World of Warcraft versions.
 
 > **GNOME users:** GNOME has no system tray by default. Install the
 > [AppIndicator and KStatusNotifierItem Support](https://extensions.gnome.org/extension/615/appindicator-support/)
@@ -90,6 +124,7 @@ If you installed to a custom directory, add `--install-dir <path>`.
 | `tar`, `gzip`, `xz` | Unpacking GE-Proton and the Steam Linux Runtime  | `tar`, `gzip`, `xz-utils` (`xz` on Fedora and Arch) |
 | `sha256sum`, `sha512sum` | Verifying downloads                         | `coreutils`                          |
 | `flock`             | Preventing two starts from running at once       | `util-linux`                         |
+| `pgrep`             | Detecting an already running Battle.net          | `procps` (`procps-ng` on Fedora and Arch) |
 
 A GPU driver with Vulkan support, including 32-bit libraries, is also required.
 

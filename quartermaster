@@ -155,6 +155,7 @@ export STEAM_COMPAT_DATA_PATH="$prefix"
 export STEAM_COMPAT_CLIENT_INSTALL_PATH="$dir"
 export STEAM_COMPAT_TOOL_PATHS="$proton_dir"
 export SteamAppId=$APP_ID
+export PROTON_ENABLE_WAYLAND="${PROTON_ENABLE_WAYLAND:-1}"
 
 exec 9>&-
 
